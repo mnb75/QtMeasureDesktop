@@ -37,10 +37,13 @@ void TScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
     if (mouseEvent->button() != Qt::LeftButton)
         return;
 
+    _isWidgetPressed = false;
+
     // click on movable widget
     if (itemAt(mouseEvent->screenPos(), QTransform())
             && (itemAt(mouseEvent->screenPos(), QTransform())->type() == 3
             || itemAt(mouseEvent->screenPos(), QTransform())->type() == 12)) {
+        _isWidgetPressed = true;
         QGraphicsScene::mousePressEvent(mouseEvent);
         return;
     }
@@ -101,7 +104,7 @@ void TScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
 
 void TScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
 {
-    if(_mode == Mode::DrawMode) {
+    if(_mode == Mode::DrawMode && !_isWidgetPressed) {
         if (_isLeftClickPressed) { // check if mouse left button pressed for first time(line start point) or not
             if (_isShiftKeyPressed) { // check if shift key pressed or not(line drawing change to horizontal, vertical or 45deg according to the cursor position)
                 QLineF line;
@@ -144,6 +147,11 @@ void TScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
     } else {
         QGraphicsScene::mouseMoveEvent(mouseEvent);
     }
+}
+
+void TScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
+{
+    event->ignore();
 }
 
 void TScene::keyPressEvent(QKeyEvent *keyEvent)

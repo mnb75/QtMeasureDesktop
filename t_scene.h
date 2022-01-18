@@ -23,6 +23,7 @@ public:
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *keyEvent);
     void keyReleaseEvent(QKeyEvent *keyEvent);
 
@@ -39,7 +40,8 @@ private:
     QPointF _endPoint;
 
     bool _isLeftClickPressed = false;
-    bool _isShiftKeyPressed = false;
+    bool _isShiftKeyPressed  = false;
+    bool _isWidgetPressed    = false;
 
     TLineLabelItem *_lineLabelItem = nullptr;
 };
