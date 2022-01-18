@@ -1,23 +1,25 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QRect>
 #include <QDesktopWidget>
-#include <QPainter>
-#include <QMouseEvent>
+#include <QGraphicsView>
+#include <QGraphicsProxyWidget>
 
-#include <QLabel>
-#include <QLine>
-#include <QtMath>
+#include <QGroupBox>
+#include <QGridLayout>
 #include <QPushButton>
+#include <QRadioButton>
+#include <QSpacerItem>
 
-#include <QDebug>
+#include "t_central_widget.h"
+#include "t_scene.h"
 
 // TODOS:
 // (done)1-push buttons for closing, minimizing and clearing
-//       2-selecting and translating and deleteng each single drawed line
+//       2-selecting and translating and deleting each single drawed line
 //       3-handle right click for cancling just drawing line
 //       4-add setting button for some customization like change line color and etc.
+//       5-use qgraphicview
 //       4-refactoring
 //       5-transfer to git version control
 //       6-push to github
@@ -44,11 +46,24 @@ MainWindow::MainWindow(QWidget *parent) :
     int width = rec.width();
     setFixedSize(width, height);
 
-    // if mouse tracking is enabled, the widget receives mouse move events even if no buttons are pressed
-    centralWidget()->setAttribute(Qt::WA_TransparentForMouseEvents);
-    setMouseTracking(true);
+    initScene(parent);
 
-    ui->groupBox->setStyleSheet("QGroupBox {background-color: rgb(255, 255, 255);}");
+    QHBoxLayout *layout = new QHBoxLayout;
+    layout->setMargin(0);
+    _view = new QGraphicsView(_scene);
+    _view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    _view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    _view->setFixedSize(width, height);
+    _view->setSceneRect(0, 0, width, height);
+
+    layout->addWidget(_view);
+
+    QWidget *widget = new QWidget;
+    widget->setLayout(layout);
+
+    setCentralWidget(widget);
+    setWindowTitle(tr("Measure Desktop"));
 }
 
 MainWindow::~MainWindow()
@@ -56,172 +71,60 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::mousePressEvent(QMouseEvent *mouseEvent)
-{
-    QRect gbxGeometry = ui->groupBox->geometry();
-
-    if (mouseEvent->pos().x() >= gbxGeometry.x()
-            && mouseEvent->pos().x() <= gbxGeometry.x() + gbxGeometry.width()
-            && mouseEvent->pos().y() >= gbxGeometry.y()
-            && mouseEvent->pos().y() <= gbxGeometry.y() + gbxGeometry.height()) { // click inside groupbox
-
-        QRect btnMinimizeGeometry = ui->btnMinimize->geometry();
-        QRect btnCloseGeometry    = ui->btnClose->geometry();
-        QRect btnClearGeometry    = ui->btnClear->geometry();
-
-        if (mouseEvent->pos().x() >= btnMinimizeGeometry.x()
-                && mouseEvent->pos().x() <= btnMinimizeGeometry.x() + btnMinimizeGeometry.width()
-                && mouseEvent->pos().y() >= btnMinimizeGeometry.y()
-                && mouseEvent->pos().y() <= btnMinimizeGeometry.y() + btnMinimizeGeometry.height()) { // click btnMinimize
-            ui->btnMinimize->click();
-        } else if (mouseEvent->pos().x() >= btnCloseGeometry.x()
-                   && mouseEvent->pos().x() <= btnCloseGeometry.x() + btnCloseGeometry.width()
-                   && mouseEvent->pos().y() >= btnCloseGeometry.y()
-                   && mouseEvent->pos().y() <= btnCloseGeometry.y() + btnCloseGeometry.height()) { // click btnCloseGeometry
-            ui->btnClose->click();
-        } else if (mouseEvent->pos().x() >= btnClearGeometry.x()
-                   && mouseEvent->pos().x() <= btnClearGeometry.x() + btnClearGeometry.width()
-                   && mouseEvent->pos().y() >= btnClearGeometry.y()
-                   && mouseEvent->pos().y() <= btnClearGeometry.y() + btnClearGeometry.height()) { // click btnClearGeometry
-            ui->btnClear->click();
-        }
-
-        QMainWindow::mousePressEvent(mouseEvent);
-
-    } else {
-        if ((mouseEvent->button() == Qt::LeftButton)) {
-            if (!_isLeftClickPressed) {
-                _isLeftClickPressed = true;
-                _startPoint = mouseEvent->pos();
-
-                QLabel *label = new QLabel(centralWidget());
-                label->setGeometry(_startPoint.x(), _startPoint.y(), 50, 50);
-                label->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-                label->setStyleSheet("QLabel {color:blue;}");
-                label->setWindowFlag(Qt::FramelessWindowHint); // No frame
-                label->setAttribute(Qt::WA_NoSystemBackground); // No background
-                label->setAttribute(Qt::WA_TranslucentBackground);
-                QFont font = label->font();
-                font.setPixelSize(13);
-                label->setFont(font);
-                label->show();
-
-                _labels.append(label);
-
-                QLineF line;
-                line.setP1(_startPoint);
-                _lines.append(line);
-
-            } else {
-                _isLeftClickPressed = false;
-                _endPoint = mouseEvent->pos();
-                if (_isShiftKeyPressed) {
-                    QLineF line;
-                    line.setP1(_startPoint);
-                    line.setP2(mouseEvent->pos());
-                    double angle = line.angle(); // in degree(between 0 to 360 ccw)
-
-                    QPointF point;
-                    if (angle <= 45.0 || angle >= 315.0 || (angle >= 135.0 && angle <= 225.0)) { // projected on x axis
-                        point.setX(mouseEvent->pos().x());
-                        point.setY(_startPoint.y());
-
-                    } else { // projected on y axis
-                        point.setX(_startPoint.x());
-                        point.setY(mouseEvent->pos().y());
-
-                    }
-                    _lines.last().setP2(point);
-                } else {
-                    _lines.last().setP2(_endPoint);
-                }
-                update();
-            }
-        }
-    }
-}
-
-void MainWindow::mouseMoveEvent(QMouseEvent *mouseEvent)
-{
-    if (_isLeftClickPressed) {
-        if (_isShiftKeyPressed) {
-            QLineF line;
-            line.setP1(_startPoint);
-            line.setP2(mouseEvent->pos());
-            double angle = line.angle(); // in degree(between 0 to 360 ccw)
-
-            QPointF point;
-            if (angle <= 35.0 || angle >= 325.0 || (angle >= 145.0 && angle <= 215.0)) { // projected on x axis
-                point.setX(mouseEvent->pos().x());
-                point.setY(_startPoint.y());
-
-            } else if ((angle > 35.0 && angle < 55.0) || (angle > 125.0 && angle < 145.0)
-                       || (angle > 215.0 && angle < 235.0) || (angle > 305.0 && angle < 325.0)) { // projected on 45deg
-                point.setX(mouseEvent->pos().x());
-                double dx = line.dx();
-                angle = (angle > 35.0 && angle < 55.0) ? 45.0 : (angle > 125.0 && angle < 145.0)
-                                                         ? 135.0 : (angle > 215.0 && angle < 235.0) ? 225.0 : 315.0;
-                double vatar = dx / qSin(angle * M_PI / 180.0);
-                int sign = (angle > 35.0 && angle < 55.0) ? -1 : (angle > 125.0 && angle < 145.0) ? -1 : 1;
-                double dy = sign * qSqrt(vatar * vatar - dx * dx);
-                point.setY(dy + line.y1());
-
-            } else { // projected on y axis
-                point.setX(_startPoint.x());
-                point.setY(mouseEvent->pos().y());
-
-            }
-            _lines.last().setP2(point);
-
-        } else {
-            _lines.last().setP2(mouseEvent->pos());
-        }
-        _labels.last()->setText(QString::number(_lines.last().length()));
-        _labels.last()->setGeometry(_lines.last().center().x(), _lines.last().center().y(), 50, 50);
-        update();
-    }
-}
-
-void MainWindow::keyPressEvent(QKeyEvent *keyEvent)
-{
-    if (keyEvent->key() == Qt::Key_Shift)
-        _isShiftKeyPressed = true;
-}
-
-void MainWindow::keyReleaseEvent(QKeyEvent *keyEvent)
-{
-    if (keyEvent->key() == Qt::Key_Shift)
-        _isShiftKeyPressed = false;
-}
-
-void MainWindow::paintEvent(QPaintEvent *event)
-{
-    Q_UNUSED(event);
-
-    if (_lines.count() != 0 && _labels.count() != 0) {
-        QPainter painter(this);
-        painter.setPen(QPen(Qt::black, 3, Qt::SolidLine, Qt::RoundCap));
-        painter.drawLines(_lines);
-    }
-}
-
-
-void MainWindow::on_btnClose_clicked()
+void MainWindow::handle_btnClose_click()
 {
     close();
 }
 
-void MainWindow::on_btnMinimize_clicked()
+void MainWindow::handle_btnMinimize_click()
 {
     setWindowState(Qt::WindowMinimized);
 }
 
-void MainWindow::on_btnClear_clicked()
+void MainWindow::handle_mode_change(bool toggled)
 {
-    if (_labels.count() && _lines.count()) {
-        qDeleteAll(_labels);
-        _lines.clear();
-        _labels.clear();
-        update();
-    }
+    TScene::Mode mode = toggled ? TScene::Mode::DrawMode : TScene::Mode::SelectMode;
+    _scene->setMode(mode);
+}
+
+void MainWindow::initScene(QWidget *parent)
+{
+    QGroupBox *groupBox = new QGroupBox();
+    groupBox->setGeometry(0, 26, 102, 105);
+    groupBox->setFixedSize(105, 105);
+
+    QGridLayout *gridLayout = new QGridLayout(groupBox);
+    gridLayout->setSpacing(0);
+    gridLayout->setContentsMargins(0, 0, 0, 0);
+
+    QPushButton *btnClose = new QPushButton("Close", groupBox);
+    QPushButton *btnMinimize = new QPushButton("Minimize", groupBox);
+    QPushButton *btnClear = new QPushButton("Clear", groupBox);
+    QRadioButton *rbDraw = new QRadioButton("Draw", groupBox);
+    QRadioButton *rbSelect = new QRadioButton("Select", groupBox);
+    QSpacerItem *verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+    btnClear->setFixedSize(102, 25);
+    btnClose->setFixedSize(102, 25);
+    btnMinimize->setFixedSize(102, 25);
+
+    rbDraw->setFixedSize(45, 15);
+    rbDraw->setChecked(true);
+    rbSelect->setFixedSize(50, 15);
+
+    gridLayout->addWidget(btnMinimize, 0, 0, 1, 2);
+    gridLayout->addWidget(btnClear,    1, 0, 1, 2);
+    gridLayout->addWidget(btnClose,    2, 0, 1, 2);
+    gridLayout->addItem(verticalSpacer, 3, 0, 1, 1);
+    gridLayout->addWidget(rbDraw,      4, 0, 1, 1);
+    gridLayout->addWidget(rbSelect,    4, 1, 1, 1);
+
+    groupBox->setLayout(gridLayout);
+
+    _scene = new TScene(groupBox, parent);
+
+    connect(btnClose, SIGNAL(clicked(bool)), this, SLOT(handle_btnClose_click()));
+    connect(btnMinimize, SIGNAL(clicked(bool)), this, SLOT(handle_btnMinimize_click()));
+    connect(btnClear, SIGNAL(clicked(bool)), _scene, SLOT(handle_btnClear_click()));
+    connect(rbDraw, SIGNAL(toggled(bool)), this, SLOT(handle_mode_change(bool)));
 }

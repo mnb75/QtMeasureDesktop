@@ -25,10 +25,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    t_line.cpp \
+    t_scene.cpp \
+    t_groupbox_item.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    t_line.h \
+    t_scene.h \
+    t_groupbox_item.h
 
 FORMS += \
         mainwindow.ui

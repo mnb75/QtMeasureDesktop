@@ -11,10 +11,7 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QGridLayout>
-#include <QtWidgets/QGroupBox>
 #include <QtWidgets/QMainWindow>
-#include <QtWidgets/QPushButton>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -23,41 +20,15 @@ class Ui_MainWindow
 {
 public:
     QWidget *centralWidget;
-    QGroupBox *groupBox;
-    QGridLayout *gridLayout;
-    QPushButton *btnClose;
-    QPushButton *btnMinimize;
-    QPushButton *btnClear;
 
     void setupUi(QMainWindow *MainWindow)
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(400, 300);
+        MainWindow->resize(708, 367);
+        MainWindow->setMouseTracking(true);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
-        groupBox = new QGroupBox(centralWidget);
-        groupBox->setObjectName(QStringLiteral("groupBox"));
-        groupBox->setGeometry(QRect(0, 0, 95, 101));
-        gridLayout = new QGridLayout(groupBox);
-        gridLayout->setSpacing(6);
-        gridLayout->setContentsMargins(11, 11, 11, 11);
-        gridLayout->setObjectName(QStringLiteral("gridLayout"));
-        btnClose = new QPushButton(groupBox);
-        btnClose->setObjectName(QStringLiteral("btnClose"));
-
-        gridLayout->addWidget(btnClose, 0, 0, 1, 1);
-
-        btnMinimize = new QPushButton(groupBox);
-        btnMinimize->setObjectName(QStringLiteral("btnMinimize"));
-
-        gridLayout->addWidget(btnMinimize, 1, 0, 1, 1);
-
-        btnClear = new QPushButton(groupBox);
-        btnClear->setObjectName(QStringLiteral("btnClear"));
-
-        gridLayout->addWidget(btnClear, 2, 0, 1, 1);
-
         MainWindow->setCentralWidget(centralWidget);
 
         retranslateUi(MainWindow);
@@ -68,10 +39,6 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", nullptr));
-        groupBox->setTitle(QString());
-        btnClose->setText(QApplication::translate("MainWindow", "Close", nullptr));
-        btnMinimize->setText(QApplication::translate("MainWindow", "Minimize", nullptr));
-        btnClear->setText(QApplication::translate("MainWindow", "Clear", nullptr));
     } // retranslateUi
 
 };
