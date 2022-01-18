@@ -41,25 +41,11 @@ void TScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
             _isLeftClickPressed = true;
             _startPoint = mouseEvent->screenPos();
 
-            QLabel *label = new QLabel();
-            label->setGeometry(_startPoint.x(), _startPoint.y(), 50, 50);
-            label->setAlignment(Qt::AlignTop | Qt::AlignLeft);
-            label->setStyleSheet("QLabel {color:blue;}");
-            label->setWindowFlag(Qt::FramelessWindowHint); // No frame
-            label->setAttribute(Qt::WA_NoSystemBackground); // No background
-            label->setAttribute(Qt::WA_TranslucentBackground);
-            QFont font = label->font();
-            font.setPixelSize(13);
-            label->setFont(font);
-            addWidget(label);
-            label->show();
-            _labels.append(label);
-
             QLineF line;
             line.setP1(_startPoint);
             line.setP2(QPointF(_startPoint.x() + 1, _startPoint.y() + 1));
-            _lineItem = new TLine(line);
-            addItem(_lineItem);
+            _lineLabelItem = new TLineLabelItem(line);
+            addItem(_lineLabelItem);
 
         } else { // second press for line end point
             _isLeftClickPressed = false;
@@ -90,11 +76,11 @@ void TScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
                     point.setX(_startPoint.x());
                     point.setY(mouseEvent->buttonDownScreenPos(Qt::LeftButton).y());
                 }
-                QLineF newLine(_lineItem->line().p1(), point);
-                _lineItem->setLine(newLine);
+                QLineF newLine(_lineLabelItem->getLine()->line().p1(), point);
+                _lineLabelItem->getLine()->setLine(newLine);
             } else {
-                QLineF newLine(_lineItem->line().p1(), _endPoint);
-                _lineItem->setLine(newLine);
+                QLineF newLine(_lineLabelItem->getLine()->line().p1(), _endPoint);
+                _lineLabelItem->getLine()->setLine(newLine);
             }
         }
     } else {
@@ -133,16 +119,19 @@ void TScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
                     point.setY(mouseEvent->screenPos().y());
 
                 }
-                QLineF newLine(_lineItem->line().p1(), point);
-                _lineItem->setLine(newLine);
+                QLineF newLine(_lineLabelItem->getLine()->line().p1(), point);
+                _lineLabelItem->getLine()->setLine(newLine);
 
             } else {
-                QLineF newLine(_lineItem->line().p1(), mouseEvent->screenPos());
-                _lineItem->setLine(newLine);
+                QLineF newLine(_lineLabelItem->getLine()->line().p1(), mouseEvent->screenPos());
+                _lineLabelItem->getLine()->setLine(newLine);
             }
-            _labels.last()->setText(QString::number(_lineItem->line().length()));
-            _labels.last()->setGeometry(_lineItem->line().center().x(),
-                                        _lineItem->line().center().y(), 50, 50);
+//            _labels.last()->setText(QString::number(_lineLabelItem->line().length()));
+//            _labels.last()->setGeometry(_lineLabelItem->line().center().x(),
+//                                        _lineLabelItem->line().center().y(), 50, 50);
+            _lineLabelItem->getLabel()->setPlainText(QString::number(_lineLabelItem->getLine()->line().length()));
+            _lineLabelItem->getLabel()->setPos(_lineLabelItem->getLine()->line().center().x(),
+                                               _lineLabelItem->getLine()->line().center().y());
         }
     } else {
         QGraphicsScene::mouseMoveEvent(mouseEvent);
@@ -165,9 +154,9 @@ void TScene::keyReleaseEvent(QKeyEvent *keyEvent)
 
 void TScene::handle_btnClear_click()
 {
-    if (_labels.count() && _lineItem != nullptr && !_isLeftClickPressed) {
-        qDeleteAll(_labels);
-        _labels.clear();
+    if (_lineLabelItem != nullptr && !_isLeftClickPressed) {
+//        qDeleteAll(_labels);
+//        _labels.clear();
 
         QList<QGraphicsItem*> tempItems = items();
         QList<QGraphicsItem*> lineItems;
@@ -177,6 +166,6 @@ void TScene::handle_btnClear_click()
             }
         }
         foreach (QGraphicsItem *i, lineItems) removeItem(i);
-        _lineItem = nullptr;
+        _lineLabelItem = nullptr;
     }
 }

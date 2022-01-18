@@ -11,7 +11,6 @@
 #include <QRadioButton>
 #include <QSpacerItem>
 
-#include "t_central_widget.h"
 #include "t_scene.h"
 
 // TODOS:

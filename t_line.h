@@ -1,14 +1,14 @@
 #ifndef T_LINE_H
 #define T_LINE_H
 
-#include <QGraphicsLineItem>
+#include <QGraphicsItemGroup>
 
-class TLine : public QGraphicsLineItem
+class TLineLabelItem : public QGraphicsItemGroup
 {
 public:
-    TLine(QPointF startPoint, QPointF endPoint,
+    TLineLabelItem(QPointF startPoint, QPointF endPoint,
           QGraphicsItem *parent = nullptr);
-    TLine(QLineF line,
+    TLineLabelItem(QLineF line,
           QGraphicsItem *parent = nullptr);
 
     enum { Type = UserType + 1 };
@@ -16,6 +16,9 @@ public:
 
     QPointF startPoint() const { return _startPoint; }
     QPointF endPoint() const { return _endPoint; }
+
+    QGraphicsLineItem *getLine();
+    QGraphicsTextItem *getLabel();
 
     QRectF boundingRect() const override;
 
@@ -28,6 +31,10 @@ private:
     QPointF _endPoint;
 
     QColor _color;
+    QColor _colorSelected;
+
+    QGraphicsLineItem *_line;
+    QGraphicsTextItem *_label;
 };
 
 #endif // T_LINE_H

@@ -4,7 +4,7 @@
 #include <QGraphicsScene>
 
 class QLabel;
-class TLine;
+class TLineLabelItem;
 class QGroupBox;
 
 class TScene : public QGraphicsScene
@@ -40,7 +40,7 @@ private:
     bool _isLeftClickPressed = false;
     bool _isShiftKeyPressed = false;
 
-    TLine *_lineItem = nullptr;
+    TLineLabelItem *_lineLabelItem = nullptr;
 
     // check for using better data structure
     QList<QLabel*> _labels;
