@@ -28,6 +28,33 @@ TLineLabelItem::TLineLabelItem(QLineF line, QGraphicsItem *parent)
     addToGroup(_label);
 }
 
+TLineLabelItem::TLineLabelItem(TLineLabelItem *lineLabelItem)
+{
+    QLineF line = lineLabelItem->getLine()->line();
+    line.translate(20, 20);
+
+    _startPoint = line.p1();
+    _endPoint   = line.p2();
+    _lineColor  = Qt::black;
+    _selectedLineColor = Qt::red;
+    _labelColor = Qt::black;
+
+    setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+
+    _line = new QGraphicsLineItem(this);
+    _line->setPen(QPen(_lineColor, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    _line->setLine(line);
+    _line->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
+
+    _label = new QGraphicsTextItem();
+    _label->setPlainText(lineLabelItem->getLabel()->toPlainText());
+    _label->setPos(line.center());
+    _label->setDefaultTextColor(_labelColor);
+
+    addToGroup(_line);
+    addToGroup(_label);
+}
+
 QGraphicsLineItem *TLineLabelItem::getLine()
 {
     return _line;

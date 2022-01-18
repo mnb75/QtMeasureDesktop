@@ -20,6 +20,12 @@ TScene::TScene(QWidget *widget, QObject *parent)
 void TScene::setMode(TScene::Mode mode)
 {
     _mode = mode;
+    _isCopyRequested = false;
+    for (int i = 0; i < items().count(); ++i) { // deselect all
+        if (items().at(i)->type() == QGraphicsItem::UserType + 1) {
+            items().at(i)->setSelected(false);
+        }
+    }
 }
 
 void TScene::setLineColor(QColor color)
@@ -160,6 +166,32 @@ void TScene::keyPressEvent(QKeyEvent *keyEvent)
         _isShiftKeyPressed = true;
     else if (keyEvent->key() == Qt::Key_Delete)
         foreach (QGraphicsItem *i, selectedItems()) removeItem(i);
+    else if (keyEvent->matches(QKeySequence::Copy)) {
+        _copiedItems.clear();
+        if (selectedItems().count() > 0) {
+            _isCopyRequested = true;
+            for (int i = 0; i < selectedItems().count(); ++i) {
+                if (selectedItems().at(i)->type() == QGraphicsItem::UserType + 1) {
+                    _copiedItems.append(dynamic_cast<TLineLabelItem*>(selectedItems().at(i)));
+                }
+            }
+        }
+    } else if (keyEvent->matches(QKeySequence::Paste)) {
+        if (_isCopyRequested) {
+            for (int i = 0; i < _copiedItems.count(); ++i) {
+                _lineLabelItem = new TLineLabelItem(_copiedItems.at(i));
+                _copiedItems.replace(i, _lineLabelItem);
+                _lineLabelItem->setLineColor(_lineColor);
+                addItem(_lineLabelItem);
+            }
+        }
+    } else if (_mode == Mode::SelectMode && keyEvent->matches(QKeySequence::SelectAll)) {
+        for (int i = 0; i < items().count(); ++i) {
+            if (items().at(i)->type() == QGraphicsItem::UserType + 1) {
+                items().at(i)->setSelected(true);
+            }
+        }
+    }
 }
 
 void TScene::keyReleaseEvent(QKeyEvent *keyEvent)
@@ -171,6 +203,7 @@ void TScene::keyReleaseEvent(QKeyEvent *keyEvent)
 void TScene::handle_btnClear_click()
 {
     if (_lineLabelItem != nullptr && !_isLeftClickPressed) {
+        _isCopyRequested = false;
         QList<QGraphicsItem*> tempItems = items();
         QList<QGraphicsItem*> lineItems;
         for (int i = 0; i < tempItems.count(); ++i) {

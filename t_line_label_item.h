@@ -7,6 +7,7 @@ class TLineLabelItem : public QGraphicsItemGroup
 {
 public:
     TLineLabelItem(QLineF line, QGraphicsItem *parent = nullptr);
+    TLineLabelItem(TLineLabelItem *lineLabelItem); // copy constructor
 
     enum { Type = UserType + 1 };
     int type() const override { return Type; }

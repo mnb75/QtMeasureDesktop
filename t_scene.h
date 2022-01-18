@@ -43,6 +43,9 @@ private:
     bool _isShiftKeyPressed  = false;
     bool _isWidgetPressed    = false;
 
+    bool _isCopyRequested    = false;
+    QList<TLineLabelItem*> _copiedItems;
+
     TLineLabelItem *_lineLabelItem = nullptr;
 };
 
