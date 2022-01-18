@@ -8,7 +8,6 @@ class MainWindow;
 }
 
 class QGraphicsView;
-class QLabel;
 class TScene;
 
 class MainWindow : public QMainWindow
@@ -20,14 +19,18 @@ public:
     ~MainWindow();
 
 private slots:
-    void handle_btnClose_click();
-    void handle_btnMinimize_click();
-    void handle_mode_change(bool toggled);
+    void btnCloseClickHandle();
+    void btnMinimizeClickHandle();
+    void btnColorClickHandle();
+    void mouseEventModeChangeHandle(bool toggled);
+
 private:
     Ui::MainWindow *ui;
 
     TScene *_scene;
     QGraphicsView *_view;
+
+    QColor _lineColor = Qt::black;
 
     void initScene(QWidget *parent = 0);
 };

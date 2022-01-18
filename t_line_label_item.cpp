@@ -1,51 +1,28 @@
-#include "t_line.h"
+#include "t_line_label_item.h"
 
 #include <QPainter>
 
-#include <QDebug>
-
 #include <QGraphicsLineItem>
 #include <QGraphicsTextItem>
-
-TLineLabelItem::TLineLabelItem(QPointF startPoint, QPointF endPoint, QGraphicsItem *parent)
-    : QGraphicsItemGroup(parent)
-{
-    setHandlesChildEvents(false);
-
-    _startPoint = startPoint;
-    _endPoint   = endPoint;
-    _color      = Qt::black;
-    _colorSelected = Qt::red;
-
-    setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
-
-    _line = new QGraphicsLineItem(this);
-    _line->setPen(QPen(_color, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-    _line->setLine(_startPoint.x(), _startPoint.y(), _endPoint.x(), _endPoint.y());
-    _line->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
-
-    _label = new QGraphicsTextItem();
-
-    addToGroup(_line);
-    addToGroup(_label);
-}
 
 TLineLabelItem::TLineLabelItem(QLineF line, QGraphicsItem *parent)
     : QGraphicsItemGroup(parent)
 {
     _startPoint = line.p1();
     _endPoint   = line.p2();
-    _color      = Qt::black;
-    _colorSelected = Qt::red;
+    _lineColor  = Qt::black;
+    _selectedLineColor = Qt::red;
+    _labelColor = Qt::black;
 
     setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
 
     _line = new QGraphicsLineItem(this);
-    _line->setPen(QPen(_color, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    _line->setPen(QPen(_lineColor, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     _line->setLine(line);
     _line->setFlags(QGraphicsItem::ItemIsMovable | QGraphicsItem::ItemIsSelectable);
 
     _label = new QGraphicsTextItem();
+    _label->setDefaultTextColor(_labelColor);
 
     addToGroup(_line);
     addToGroup(_label);
@@ -59,6 +36,14 @@ QGraphicsLineItem *TLineLabelItem::getLine()
 QGraphicsTextItem *TLineLabelItem::getLabel()
 {
     return _label;
+}
+
+void TLineLabelItem::setLineColor(QColor color)
+{
+    _lineColor = color;
+    QPen pen = _line->pen();
+    pen.setColor(_lineColor);
+    _line->setPen(pen);
 }
 
 QRectF TLineLabelItem::boundingRect() const
@@ -81,13 +66,13 @@ void TLineLabelItem::paint(QPainter *painter,
     Q_UNUSED(widget);
 
     QPen myPen = _line->pen();
-    myPen.setColor(_color);
+    myPen.setColor(_lineColor);
     painter->setPen(myPen);
-    painter->setBrush(_color);
+    painter->setBrush(_lineColor);
     painter->drawLine(_line->line());
 
     if (isSelected()) {
-        painter->setPen(QPen(_colorSelected, 4));
+        painter->setPen(QPen(_selectedLineColor, 5, Qt::DashLine));
         QLineF myLine = _line->line();
         painter->drawLine(myLine);
     }

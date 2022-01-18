@@ -10,18 +10,9 @@
 #include <QPushButton>
 #include <QRadioButton>
 #include <QSpacerItem>
+#include <QColorDialog>
 
 #include "t_scene.h"
-
-// TODOS:
-// (done)1-push buttons for closing, minimizing and clearing
-//       2-selecting and translating and deleting each single drawed line
-//       3-handle right click for cancling just drawing line
-//       4-add setting button for some customization like change line color and etc.
-//       5-use qgraphicview
-//       4-refactoring
-//       5-transfer to git version control
-//       6-push to github
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent, Qt::FramelessWindowHint),
@@ -70,17 +61,26 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::handle_btnClose_click()
+void MainWindow::btnCloseClickHandle()
 {
     close();
 }
 
-void MainWindow::handle_btnMinimize_click()
+void MainWindow::btnMinimizeClickHandle()
 {
     setWindowState(Qt::WindowMinimized);
 }
 
-void MainWindow::handle_mode_change(bool toggled)
+void MainWindow::btnColorClickHandle()
+{
+    QColor newColor = QColorDialog::getColor(_lineColor);
+    if (newColor.spec() != QColor::Spec::Invalid) {
+        _scene->setLineColor(newColor);
+        _lineColor = newColor;
+    }
+}
+
+void MainWindow::mouseEventModeChangeHandle(bool toggled)
 {
     TScene::Mode mode = toggled ? TScene::Mode::DrawMode : TScene::Mode::SelectMode;
     _scene->setMode(mode);
@@ -90,7 +90,7 @@ void MainWindow::initScene(QWidget *parent)
 {
     QGroupBox *groupBox = new QGroupBox();
     groupBox->setGeometry(0, 26, 102, 105);
-    groupBox->setFixedSize(105, 105);
+    groupBox->setFixedSize(105, 135);
 
     QGridLayout *gridLayout = new QGridLayout(groupBox);
     gridLayout->setSpacing(0);
@@ -99,6 +99,7 @@ void MainWindow::initScene(QWidget *parent)
     QPushButton *btnClose = new QPushButton("Close", groupBox);
     QPushButton *btnMinimize = new QPushButton("Minimize", groupBox);
     QPushButton *btnClear = new QPushButton("Clear", groupBox);
+    QPushButton *btnColor = new QPushButton("Choose Color", groupBox);
     QRadioButton *rbDraw = new QRadioButton("Draw", groupBox);
     QRadioButton *rbSelect = new QRadioButton("Select", groupBox);
     QSpacerItem *verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
@@ -106,6 +107,7 @@ void MainWindow::initScene(QWidget *parent)
     btnClear->setFixedSize(102, 25);
     btnClose->setFixedSize(102, 25);
     btnMinimize->setFixedSize(102, 25);
+    btnColor->setFixedSize(102, 25);
 
     rbDraw->setFixedSize(45, 15);
     rbDraw->setChecked(true);
@@ -113,17 +115,19 @@ void MainWindow::initScene(QWidget *parent)
 
     gridLayout->addWidget(btnMinimize, 0, 0, 1, 2);
     gridLayout->addWidget(btnClear,    1, 0, 1, 2);
-    gridLayout->addWidget(btnClose,    2, 0, 1, 2);
-    gridLayout->addItem(verticalSpacer, 3, 0, 1, 1);
-    gridLayout->addWidget(rbDraw,      4, 0, 1, 1);
-    gridLayout->addWidget(rbSelect,    4, 1, 1, 1);
+    gridLayout->addWidget(btnColor,    2, 0, 1, 2);
+    gridLayout->addWidget(btnClose,    3, 0, 1, 2);
+    gridLayout->addItem(verticalSpacer, 4, 0, 1, 1);
+    gridLayout->addWidget(rbDraw,      5, 0, 1, 1);
+    gridLayout->addWidget(rbSelect,    5, 1, 1, 1);
 
     groupBox->setLayout(gridLayout);
 
     _scene = new TScene(groupBox, parent);
 
-    connect(btnClose, SIGNAL(clicked(bool)), this, SLOT(handle_btnClose_click()));
-    connect(btnMinimize, SIGNAL(clicked(bool)), this, SLOT(handle_btnMinimize_click()));
+    connect(btnClose, SIGNAL(clicked(bool)), this, SLOT(btnCloseClickHandle()));
+    connect(btnMinimize, SIGNAL(clicked(bool)), this, SLOT(btnMinimizeClickHandle()));
     connect(btnClear, SIGNAL(clicked(bool)), _scene, SLOT(handle_btnClear_click()));
-    connect(rbDraw, SIGNAL(toggled(bool)), this, SLOT(handle_mode_change(bool)));
+    connect(btnColor, SIGNAL(clicked(bool)), this, SLOT(btnColorClickHandle()));
+    connect(rbDraw, SIGNAL(toggled(bool)), this, SLOT(mouseEventModeChangeHandle(bool)));
 }

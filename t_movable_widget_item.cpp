@@ -1,4 +1,4 @@
-#include "t_groupbox_item.h"
+#include "t_movable_widget_item.h"
 
 #include <QGraphicsRectItem>
 #include <QGraphicsProxyWidget>

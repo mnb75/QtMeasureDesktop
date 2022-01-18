@@ -2,13 +2,12 @@
 
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsProxyWidget>
-#include <QLabel>
 
 #include <QtMath>
 #include <QKeyEvent>
 
-#include "t_line.h"
-#include "t_groupbox_item.h"
+#include "t_line_label_item.h"
+#include "t_movable_widget_item.h"
 
 TScene::TScene(QWidget *widget, QObject *parent)
     : QGraphicsScene(parent), _mode(DrawMode)
@@ -21,6 +20,16 @@ TScene::TScene(QWidget *widget, QObject *parent)
 void TScene::setMode(TScene::Mode mode)
 {
     _mode = mode;
+}
+
+void TScene::setLineColor(QColor color)
+{
+    _lineColor = color;
+    for (int i = 0; i < items().count(); ++i) {
+        if (items().at(i)->type() == QGraphicsItem::UserType + 1) {
+            dynamic_cast<TLineLabelItem*>(items().at(i))->setLineColor(_lineColor);
+        }
+    }
 }
 
 void TScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
@@ -45,6 +54,7 @@ void TScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
             line.setP1(_startPoint);
             line.setP2(QPointF(_startPoint.x() + 1, _startPoint.y() + 1));
             _lineLabelItem = new TLineLabelItem(line);
+            _lineLabelItem->setLineColor(_lineColor);
             addItem(_lineLabelItem);
 
         } else { // second press for line end point
@@ -57,12 +67,8 @@ void TScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
                 double angle = line.angle(); // in degree(between 0 to 360 ccw)
 
                 QPointF point;
-                if (angle <= 45.0 || angle >= 315.0 || (angle >= 135.0 && angle <= 225.0)) { // projected on x axis
-                    point.setX(mouseEvent->buttonDownScreenPos(Qt::LeftButton).x());
-                    point.setY(_startPoint.y());
-
-                } else if ((angle > 35.0 && angle < 55.0) || (angle > 125.0 && angle < 145.0)
-                           || (angle > 215.0 && angle < 235.0) || (angle > 305.0 && angle < 325.0)) { // projected on 45deg
+                if ((angle > 35.0 && angle < 55.0) || (angle > 125.0 && angle < 145.0)
+                        || (angle > 215.0 && angle < 235.0) || (angle > 305.0 && angle < 325.0)) { // projected on 45deg
                     point.setX(mouseEvent->screenPos().x());
                     double dx = line.dx();
                     angle = (angle > 35.0 && angle < 55.0) ? 45.0 : (angle > 125.0 && angle < 145.0)
@@ -72,7 +78,12 @@ void TScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent)
                     double dy = sign * qSqrt(vatar * vatar - dx * dx);
                     point.setY(dy + line.y1());
 
-                } else { // projected on y axis
+                } else if (angle <= 35.0 || angle >= 305.0 || (angle >= 125.0 && angle <= 215.0)) { // projected on x axis
+                    point.setX(mouseEvent->buttonDownScreenPos(Qt::LeftButton).x());
+                    point.setY(_startPoint.y());
+
+                }
+                else { // projected on y axis
                     point.setX(_startPoint.x());
                     point.setY(mouseEvent->buttonDownScreenPos(Qt::LeftButton).y());
                 }
@@ -126,9 +137,6 @@ void TScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
                 QLineF newLine(_lineLabelItem->getLine()->line().p1(), mouseEvent->screenPos());
                 _lineLabelItem->getLine()->setLine(newLine);
             }
-//            _labels.last()->setText(QString::number(_lineLabelItem->line().length()));
-//            _labels.last()->setGeometry(_lineLabelItem->line().center().x(),
-//                                        _lineLabelItem->line().center().y(), 50, 50);
             _lineLabelItem->getLabel()->setPlainText(QString::number(_lineLabelItem->getLine()->line().length()));
             _lineLabelItem->getLabel()->setPos(_lineLabelItem->getLine()->line().center().x(),
                                                _lineLabelItem->getLine()->line().center().y());
@@ -155,9 +163,6 @@ void TScene::keyReleaseEvent(QKeyEvent *keyEvent)
 void TScene::handle_btnClear_click()
 {
     if (_lineLabelItem != nullptr && !_isLeftClickPressed) {
-//        qDeleteAll(_labels);
-//        _labels.clear();
-
         QList<QGraphicsItem*> tempItems = items();
         QList<QGraphicsItem*> lineItems;
         for (int i = 0; i < tempItems.count(); ++i) {

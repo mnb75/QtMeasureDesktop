@@ -3,9 +3,7 @@
 
 #include <QGraphicsScene>
 
-class QLabel;
 class TLineLabelItem;
-class QGroupBox;
 
 class TScene : public QGraphicsScene
 {
@@ -20,6 +18,7 @@ public:
     explicit TScene(QWidget *widget, QObject *parent = nullptr);
 
     void setMode(Mode mode);
+    void setLineColor(QColor color);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
@@ -33,6 +32,8 @@ public slots:
 private:
     Mode _mode;
 
+    QColor _lineColor = Qt::black;
+
     // line points(start and end)
     QPointF _startPoint;
     QPointF _endPoint;
@@ -41,9 +42,6 @@ private:
     bool _isShiftKeyPressed = false;
 
     TLineLabelItem *_lineLabelItem = nullptr;
-
-    // check for using better data structure
-    QList<QLabel*> _labels;
 };
 
 #endif // T_SCENE_H
